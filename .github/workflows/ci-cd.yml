@@ -28,7 +28,7 @@ jobs:
       - name: Build and push NestJS
         uses: docker/build-push-action@v5
         with:
-          context: ./nestjs-app
+          context: ./duuckytracker
           push: true
           tags: ghcr.io/arthurufelix/duuckytracker:latest
           cache-from: type=gha
@@ -37,7 +37,7 @@ jobs:
       - name: Build and push Go
         uses: docker/build-push-action@v5
         with:
-          context: ./go-notifier
+          context: ./duuckynotifier
           push: true
           tags: ghcr.io/arthurufelix/duuckynotifier:latest
           cache-from: type=gha
