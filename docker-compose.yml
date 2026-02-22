@@ -36,7 +36,7 @@ services:
       retries: 5
 
   api:
-    build: ./duuckytracker
+    image: ghcr.io/${GITHUB_USERNAME}/duuckytracker:latest
     container_name: duuckytracker
     environment:
       NODE_ENV: production
@@ -54,7 +54,7 @@ services:
     restart: unless-stopped
 
   consumer:
-    build: ./duuckynotifier
+    image: ghcr.io/${GITHUB_USERNAME}/duuckynotifier:latest
     container_name: duuckynotifier
     environment:
       RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672

@@ -5,19 +5,61 @@ on:
     branches: [ main ]
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     
+    permissions:
+      packages: write
+    
     steps:
-      - name: Deploy to EC2 via SSH
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build and push NestJS
+        uses: docker/build-push-action@v5
+        with:
+          context: ./nestjs-app
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/duuckytracker:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Build and push Go
+        uses: docker/build-push-action@v5
+        with:
+          context: ./go-notifier
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/duuckynotifier:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 10m
           script: |
             cd ~/duuckytracker
-            git pull origin main
-            docker-compose up -d --build
+            
+            # Login to GitHub Container Registry
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Pull pre-built images
+            docker-compose pull
+            
+            # Restart services
+            docker-compose up -d
+            
+            # Clean up
             docker image prune -f
-            echo "✅ Deployed successfully!"
+            
+            echo "✅ Deployment complete!"
