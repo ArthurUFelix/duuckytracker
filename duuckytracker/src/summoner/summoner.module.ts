@@ -14,9 +14,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         name: 'SUMMONER_SERVICE',
         transport: Transport.RMQ,
         options: {
-          urls: [
-            `amqp://${process.env.RABBITMQ_HOST}:${process.env.RABBITMQ_PORT}`,
-          ],
+          urls: [String(process.env.RABBITMQ_URL)],
           queue: 'summoners',
           queueOptions: {
             durable: true,
