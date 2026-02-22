@@ -30,7 +30,7 @@ jobs:
         with:
           context: ./nestjs-app
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/duuckytracker:latest
+          tags: ghcr.io/arthurufelix/duuckytracker:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
       
@@ -39,7 +39,7 @@ jobs:
         with:
           context: ./go-notifier
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/duuckynotifier:latest
+          tags: ghcr.io/arthurufelix/duuckynotifier:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
       
