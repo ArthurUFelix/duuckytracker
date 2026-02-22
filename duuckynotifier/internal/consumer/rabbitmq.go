@@ -25,7 +25,7 @@ func NewConsumer(rabbitmqURL, queueName string, discord *notifier.DiscordNotifie
 	channel, err := conn.Channel()
 	if err != nil {
 		conn.Close()
-		return nil, fmt.Errorf("failed to open channel:: %w", err)
+		return nil, fmt.Errorf("failed to open channel: %w", err)
 	}
 
 	_, err = channel.QueueDeclare(
