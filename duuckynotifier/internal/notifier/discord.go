@@ -37,6 +37,7 @@ type SummonerData struct {
 	Wins     int    `json:"wins"`
 	Losses   int    `json:"losses"`
 	LPDelta  int    `json:"lpDelta"`
+	LeaguePoints int `json:"leaguePoints"`
 }
 
 type discordWebhook struct {
@@ -98,7 +99,7 @@ func (d *DiscordNotifier) SendNotification(msg RabbitMQMessage) error {
 			},
 			{
 				Name: "Status",
-				Value: fmt.Sprintf("Vitórias: %d - Derrotas: %d - WR: %.1f%%", summoner.Wins, summoner.Losses, winRate),
+				Value: fmt.Sprintf("PDL: %d - Vitórias: %d - Derrotas: %d - WR: %.1f%%", summoner.LeaguePoints, summoner.Wins, summoner.Losses, winRate),
 				Inline: true,
 			},
 		},

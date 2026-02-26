@@ -48,6 +48,7 @@ export class SummonerSchedulerService {
                 wins: soloqInfo.wins,
                 losses: soloqInfo.losses,
                 lpDelta: soloqInfo.leaguePoints - summoner.leaguePoints,
+                leaguePoints: soloqInfo.leaguePoints,
               },
             });
           }
