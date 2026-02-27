@@ -64,5 +64,10 @@ jobs:
             
             # Clean up
             docker image prune -f
+
+            # Clean up aggressively
+            docker image prune -a -f
+            docker volume prune -f
+            docker system prune -f
             
             echo "✅ Deployment complete!"
