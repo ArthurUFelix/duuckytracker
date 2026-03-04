@@ -10,7 +10,7 @@ import (
 
 type DiscordNotifier struct {
 	webhookURL string
-	client *http.Client
+	client     *http.Client
 }
 
 func NewDiscordNotifier(webhookURL string) *DiscordNotifier {
@@ -33,11 +33,15 @@ type MessageData struct {
 }
 
 type SummonerData struct {
-	Summoner string `json:"summoner"`
-	Wins     int    `json:"wins"`
-	Losses   int    `json:"losses"`
-	LPDelta  int    `json:"lpDelta"`
-	LeaguePoints int `json:"leaguePoints"`
+	Summoner     string `json:"summoner"`
+	Wins         int    `json:"wins"`
+	Losses       int    `json:"losses"`
+	LPDelta      int    `json:"lpDelta"`
+	LeaguePoints int    `json:"leaguePoints"`
+	Kills        int    `json:"kills"`
+	Deaths       int    `json:"deaths"`
+	Assists      int    `json:"assists"`
+	ChampionName string `json:"championName"`
 }
 
 type discordWebhook struct {
@@ -45,21 +49,21 @@ type discordWebhook struct {
 }
 
 type discordEmbed struct {
-	Title string `json:"title"`
-	Color int  `json:"color"`
-	Fields []embedField `json:"fields"`
-	Timestamp string `json:"timestamp"`
-	Footer *embedFooter `json:"footer,omitempty"`
+	Title     string          `json:"title"`
+	Color     int             `json:"color"`
+	Fields    []embedField    `json:"fields"`
+	Timestamp string          `json:"timestamp"`
+	Thumbnail *embedThumbnail `json:"thumbnail"`
+}
+
+type embedThumbnail struct {
+	Url string `json:"url"`
 }
 
 type embedField struct {
-	Name string `json:"name"`
-	Value string `json:"value"`
-	Inline bool `json:"inline"`
-}
-
-type embedFooter struct {
-	Text string `json:"text"`
+	Name   string `json:"name"`
+	Value  string `json:"value"`
+	Inline bool   `json:"inline"`
 }
 
 func (d *DiscordNotifier) SendNotification(msg RabbitMQMessage) error {
@@ -67,7 +71,7 @@ func (d *DiscordNotifier) SendNotification(msg RabbitMQMessage) error {
 	color := 15158332 // Red for loss
 	result := "💀 Derrota"
 
-	if summoner.LPDelta  > 0 {
+	if summoner.LPDelta > 0 {
 		color = 3066993 // Green for win
 		result = "🏆 Vitória"
 	}
@@ -98,10 +102,18 @@ func (d *DiscordNotifier) SendNotification(msg RabbitMQMessage) error {
 				Inline: true,
 			},
 			{
-				Name: "Status",
-				Value: fmt.Sprintf("PDL: %d - Vitórias: %d - Derrotas: %d - WR: %.1f%%", summoner.LeaguePoints, summoner.Wins, summoner.Losses, winRate),
+				Name:   "KDA",
+				Value:  fmt.Sprintf("%d/%d/%d", summoner.Kills, summoner.Deaths, summoner.Assists),
 				Inline: true,
 			},
+			{
+				Name:   "Status",
+				Value:  fmt.Sprintf("PDL: %d - Vitórias: %d - Derrotas: %d - WR: %.1f%%", summoner.LeaguePoints, summoner.Wins, summoner.Losses, winRate),
+				Inline: true,
+			},
+		},
+		Thumbnail: &embedThumbnail{
+			Url: fmt.Sprintf("https://ddragon.leagueoflegends.com/cdn/img/champion/loading/%s_0.jpg", summoner.ChampionName),
 		},
 	}
 
@@ -117,7 +129,7 @@ func (d *DiscordNotifier) SendNotification(msg RabbitMQMessage) error {
 	resp, err := d.client.Post(
 		d.webhookURL,
 		"application/json",
-		bytes.NewBuffer(payload), 
+		bytes.NewBuffer(payload),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to send webhook rqeuest: %w", err)

@@ -4,7 +4,6 @@ import { SummonerModule } from './summoner/summoner.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Summoner } from './summoner/entities/summoner.entity';
 import { ScheduleModule } from '@nestjs/schedule';
-import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -17,7 +16,6 @@ import { UserModule } from './user/user.module';
     SummonerModule,
     ScheduleModule.forRoot(),
     ConfigModule.forRoot(),
-    UserModule,
   ],
   controllers: [],
   providers: [],

@@ -35,6 +35,10 @@ export class SummonerSchedulerService {
               `Updating stats for ${summoner.gameName}#${summoner.tagLine}: wins ${summoner.wins} -> ${soloqInfo.wins}, losses ${summoner.losses} -> ${soloqInfo.losses}`,
             );
 
+            const matchInfo = await this.leagueApiService.getLastMatchInfo(
+              summoner.puuid,
+            );
+
             await this.summonerService.update(summoner.id, {
               wins: soloqInfo.wins,
               losses: soloqInfo.losses,
@@ -49,6 +53,7 @@ export class SummonerSchedulerService {
                 losses: soloqInfo.losses,
                 lpDelta: soloqInfo.leaguePoints - summoner.leaguePoints,
                 leaguePoints: soloqInfo.leaguePoints,
+                ...matchInfo,
               },
             });
           }
