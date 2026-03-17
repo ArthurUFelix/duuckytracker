@@ -7,13 +7,15 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
 import { User } from './user/entities/user.entity';
 import { UserModule } from './user/user.module';
+import { MatchModule } from './match/match.module';
+import { Match } from './match/entities/match.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
-      entities: [Summoner, User],
+      entities: [Summoner, User, Match],
       synchronize: true,
     }),
     SummonerModule,
@@ -21,6 +23,7 @@ import { UserModule } from './user/user.module';
     ConfigModule.forRoot(),
     AuthModule,
     UserModule,
+    MatchModule,
   ],
   controllers: [],
   providers: [],
