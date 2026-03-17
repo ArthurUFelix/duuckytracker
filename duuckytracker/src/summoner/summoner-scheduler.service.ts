@@ -70,7 +70,6 @@ export class SummonerSchedulerService {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Error in checkInGameStatus: ${message}`);
-      this.logger.error(error);
     }
   }
 }

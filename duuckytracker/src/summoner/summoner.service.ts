@@ -24,7 +24,7 @@ export class SummonerService {
         summonerData.puuid,
       );
 
-      const newUser = this.summonerRepository.create({
+      const newSummoner = this.summonerRepository.create({
         ...createSummonerDto,
         puuid: summonerData.puuid,
         wins: soloqInfo.wins,
@@ -32,7 +32,7 @@ export class SummonerService {
         leaguePoints: soloqInfo.leaguePoints,
       });
 
-      return await this.summonerRepository.save(newUser);
+      return await this.summonerRepository.save(newSummoner);
     } catch (error) {
       if (error.code === '23505') {
         throw new HttpException(

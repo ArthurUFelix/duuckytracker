@@ -121,11 +121,6 @@ export class LeagueApiService {
       const history = await response.json();
       return history[0];
     } catch (error) {
-      console.log(
-        'omg',
-        `${this.matchesAPI}by-puuid/${encodeURIComponent(puuid)}/ids?queue=420&type=ranked&start=0&count=1`,
-        error,
-      );
       if (error instanceof HttpException) {
         throw error;
       }
@@ -175,7 +170,6 @@ export class LeagueApiService {
         championName: player.championName,
       };
     } catch (error) {
-      console.log('u gue', error);
       if (error instanceof HttpException) {
         throw error;
       }
