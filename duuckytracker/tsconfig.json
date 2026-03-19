@@ -16,6 +16,7 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,

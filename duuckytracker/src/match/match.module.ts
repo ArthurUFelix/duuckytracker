@@ -3,10 +3,27 @@ import { MatchService } from './match.service';
 import { MatchController } from './match.controller';
 import { Match } from './entities/match.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { MatchSchedulerService } from './match-scheduler.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Match])],
+  imports: [
+    ClientsModule.register([
+      {
+        name: 'MATCH_SERVICE',
+        transport: Transport.RMQ,
+        options: {
+          urls: [String(process.env.RABBITMQ_URL)],
+          queue: 'matches',
+          queueOptions: {
+            durable: true,
+          },
+        },
+      },
+    ]),
+    TypeOrmModule.forFeature([Match]),
+  ],
   controllers: [MatchController],
-  providers: [MatchService],
+  providers: [MatchService, MatchSchedulerService],
 })
 export class MatchModule {}

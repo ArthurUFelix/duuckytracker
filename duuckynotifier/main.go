@@ -21,15 +21,26 @@ func main() {
 
 	discord := notifier.NewDiscordNotifier(cfg.DiscordWebhookURL)
 
-	rabbitConsumer, err := consumer.NewConsumer(cfg.RabbitMQURL, "summoners", discord)
+	summonerConsumer, err := consumer.NewConsumer(cfg.RabbitMQURL, "summoners", discord)
 	if err != nil {
-		log.Fatalf("Failed to create consumer: %v", err)
+		log.Fatalf("Failed to create summoner consumer: %v", err)
 	}
-	defer rabbitConsumer.Close()
+	defer summonerConsumer.Close()
 
-	err = rabbitConsumer.Start()
+	err = summonerConsumer.Start()
 	if err != nil {
-		log.Fatalf("Failed to start consumer: %v", err)
+		log.Fatalf("Failed to start summoner consumer: %v", err)
+	}
+
+	matchConsumer, err := consumer.NewConsumer(cfg.RabbitMQURL, "matches", discord)
+	if err != nil {
+		log.Fatalf("Failed to create match consumer: %v", err)
+	}
+	defer matchConsumer.Close()
+
+	err = matchConsumer.Start()
+	if err != nil {
+		log.Fatalf("Failed to start match consumer: %v", err)
 	}
 
 	log.Println("Listening for messages... Press Ctrl+C to stop")

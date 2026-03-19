@@ -16,7 +16,7 @@ export class MatchService {
     return await this.matchRepository.save(newMatch);
   }
 
-  async findAll() {
-    return await this.matchRepository.find();
+  async findAll(filters = {}) {
+    return await this.matchRepository.find(filters);
   }
 }

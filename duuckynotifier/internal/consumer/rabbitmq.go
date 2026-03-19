@@ -10,9 +10,9 @@ import (
 )
 
 type Consumer struct {
-	conn *amqp.Connection
-	channel *amqp.Channel
-	queueName string
+	conn            *amqp.Connection
+	channel         *amqp.Channel
+	queueName       string
 	discordNotifier *notifier.DiscordNotifier
 }
 
@@ -54,9 +54,9 @@ func NewConsumer(rabbitmqURL, queueName string, discord *notifier.DiscordNotifie
 	log.Println("Connected to RabbitMQ")
 
 	return &Consumer{
-		conn: conn,
-		channel: channel,
-		queueName: queueName,
+		conn:            conn,
+		channel:         channel,
+		queueName:       queueName,
 		discordNotifier: discord,
 	}, nil
 }
@@ -97,7 +97,7 @@ func (c *Consumer) handleMessage(msg amqp.Delivery) {
 		return
 	}
 
-	err = c.discordNotifier.SendNotification(rabbitMsg)
+	err = c.discordNotifier.SendNotification(rabbitMsg, c.queueName)
 	if err != nil {
 		log.Printf("failed to send Discord notification: %v", err)
 		msg.Nack(false, true)

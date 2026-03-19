@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -28,8 +29,8 @@ type RabbitMQMessage struct {
 }
 
 type MessageData struct {
-	ID   string       `json:"id"`
-	Data SummonerData `json:"data"`
+	ID   string          `json:"id"`
+	Data json.RawMessage `json:"data"`
 }
 
 type SummonerData struct {
@@ -42,6 +43,15 @@ type SummonerData struct {
 	Deaths       int    `json:"deaths"`
 	Assists      int    `json:"assists"`
 	ChampionName string `json:"championName"`
+}
+
+type MatchRankingData struct {
+	MatchesRanking []MatchData `json:"matchesRanking"`
+}
+
+type MatchData struct {
+	Summoner     string `json:"summoner"`
+	MatchesCount int    `json:"matchesCount"`
 }
 
 type discordWebhook struct {
@@ -66,8 +76,51 @@ type embedField struct {
 	Inline bool   `json:"inline"`
 }
 
-func (d *DiscordNotifier) SendNotification(msg RabbitMQMessage) error {
-	summoner := msg.Data.Data
+func (d *DiscordNotifier) SendNotification(msg RabbitMQMessage, queueName string) error {
+	var webhook discordWebhook
+	var err error
+
+	switch queueName {
+	case "summoners":
+		webhook, err = buildSummonerWebhook(msg)
+	case "matches":
+		webhook, err = buildMatchWebhook(msg)
+	default:
+		return fmt.Errorf("invalid queuename: %s", queueName)
+	}
+
+	if err != nil {
+		return fmt.Errorf("failed to build webhook: %w", err)
+	}
+
+	payload, err := json.Marshal(webhook)
+	if err != nil {
+		return fmt.Errorf("failed to marshal webhook payload: %w", err)
+	}
+
+	resp, err := d.client.Post(
+		d.webhookURL,
+		"application/json",
+		bytes.NewBuffer(payload),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to send webhook rqeuest: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("discord API returned status %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+func buildSummonerWebhook(msg RabbitMQMessage) (discordWebhook, error) {
+	var summoner SummonerData
+	if err := json.Unmarshal(msg.Data.Data, &summoner); err != nil {
+		return discordWebhook{}, fmt.Errorf("failed to parse summoner data: %w", err)
+	}
+
 	color := 15158332 // Red for loss
 	result := "💀 Derrota"
 
@@ -117,28 +170,53 @@ func (d *DiscordNotifier) SendNotification(msg RabbitMQMessage) error {
 		},
 	}
 
-	webhook := discordWebhook{
+	return discordWebhook{
 		Embeds: []discordEmbed{embed},
+	}, nil
+}
+
+func buildMatchWebhook(msg RabbitMQMessage) (discordWebhook, error) {
+	var rankings MatchRankingData
+	if err := json.Unmarshal(msg.Data.Data, &rankings); err != nil {
+		return discordWebhook{}, fmt.Errorf("failed to parse match data: %w", err)
 	}
 
-	payload, err := json.Marshal(webhook)
-	if err != nil {
-		return fmt.Errorf("failed to marshal webhook payload: %w", err)
+	color := 3447003 // Blue
+
+	var rankingText strings.Builder
+	medals := []string{"🥇", "🥈", "🥉"}
+	totalGames := 0
+
+	for i, entry := range rankings.MatchesRanking {
+		// Use medals for top 3, numbers for the rest
+		position := fmt.Sprintf("%d.", i+1)
+		if i < 3 {
+			position = medals[i]
+		}
+
+		rankingText.WriteString(fmt.Sprintf("%s **%s** - %d partida", position, entry.Summoner, entry.MatchesCount))
+
+		if entry.MatchesCount != 1 {
+			rankingText.WriteString("s")
+		}
+
+		rankingText.WriteString("\n")
+		totalGames += entry.MatchesCount
 	}
 
-	resp, err := d.client.Post(
-		d.webhookURL,
-		"application/json",
-		bytes.NewBuffer(payload),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to send webhook rqeuest: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("discord API returned status %d", resp.StatusCode)
+	embed := discordEmbed{
+		Title: "🏆 Ranking ARAMs jogados na última hora",
+		Color: color,
+		Fields: []embedField{
+			{
+				Name:   "",
+				Value:  rankingText.String(),
+				Inline: false,
+			},
+		},
 	}
 
-	return nil
+	return discordWebhook{
+		Embeds: []discordEmbed{embed},
+	}, nil
 }
