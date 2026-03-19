@@ -1,10 +1,4 @@
-import {
-  Column,
-  DeleteDateColumn,
-  Entity,
-  Index,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'matches' })
 export class Match {
@@ -12,7 +6,10 @@ export class Match {
   id: number;
 
   @Column()
-  champion: string;
+  championId: string;
+
+  @Column()
+  summonerName: string;
 
   @Column()
   date: Date;

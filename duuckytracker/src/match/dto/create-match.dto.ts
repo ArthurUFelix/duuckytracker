@@ -3,7 +3,11 @@ import { IsDateString, IsNotEmpty, IsString } from 'class-validator';
 export class CreateMatchDto {
   @IsString()
   @IsNotEmpty()
-  champion: string;
+  championId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  summonerName: string;
 
   @IsDateString()
   @IsNotEmpty()
