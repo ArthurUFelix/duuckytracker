@@ -14,7 +14,7 @@ export class MatchSchedulerService {
     @Inject('MATCH_SERVICE') private client: ClientProxy,
   ) {}
 
-  @Cron('0 * * * *')
+  @Cron('0 22 * * *')
   async checkMatchesRanking() {
     this.logger.log('Checking matches ranking...');
 
