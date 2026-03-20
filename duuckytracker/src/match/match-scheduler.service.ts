@@ -19,11 +19,11 @@ export class MatchSchedulerService {
     this.logger.log('Checking matches ranking...');
 
     try {
-      const oneHourAgo = new Date();
-      oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+      const oneDayAgo = new Date();
+      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
       const matches = await this.matchService.findAll({
         where: {
-          date: MoreThan(oneHourAgo),
+          date: MoreThan(oneDayAgo),
         },
       });
 

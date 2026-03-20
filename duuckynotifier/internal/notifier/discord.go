@@ -205,7 +205,7 @@ func buildMatchWebhook(msg RabbitMQMessage) (discordWebhook, error) {
 	}
 
 	embed := discordEmbed{
-		Title: "🏆 Ranking ARAMs jogados na última hora",
+		Title: "🏆 Ranking ARAMs diários",
 		Color: color,
 		Fields: []embedField{
 			{
