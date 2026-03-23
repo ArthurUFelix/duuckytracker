@@ -1,11 +1,19 @@
 package lcu
 
+import "encoding/json"
+
 type LockfileData struct {
 	ProcessName string
 	PID         string
 	Port        string
 	Password    string
 	Protocol    string
+}
+
+type LCUEvent struct {
+	EventType string          `json:"event_type"`
+	URI       string          `json:"uri"`
+	Data      json.RawMessage `json:"data"`
 }
 
 type Friend struct {

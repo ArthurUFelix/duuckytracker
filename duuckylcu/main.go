@@ -24,15 +24,15 @@ func main() {
 
 	apiClient := api.NewClient(cfg.APIBaseURL)
 
-	log.Printf("authenticating as %s...", cfg.APIUsername)
+	log.Println("authenticating...")
 	err = apiClient.Login(cfg.APIUsername, cfg.APIPassword)
 	if err != nil {
 		log.Fatalf("failed to authenticate with API: %v", err)
 	}
 
-	var lcuClient *lcu.Client
+	var lockfile *lcu.LockfileData
 	for {
-		lcuClient, err = lcu.NewClient()
+		lockfile, err = lcu.ReadLockfile()
 		if err != nil {
 			log.Println("waiting for League Client to start...")
 			time.Sleep(5 * time.Second)
@@ -42,9 +42,19 @@ func main() {
 	}
 	log.Println("connected to League Client")
 
-	friendTracker := tracker.NewFriendTracker(lcuClient, apiClient)
+	wsClient := lcu.NewWebsocketClient(lockfile.Port, lockfile.Password)
 
-	go friendTracker.Start(10 * time.Second)
+	if err := wsClient.Connect(); err != nil {
+		log.Fatalf("failed to connect to websocket: %v", err)
+	}
+	defer wsClient.Close()
+
+	if err := wsClient.Subscribe("OnJsonApiEvent_lol-chat_v1_friends"); err != nil {
+		log.Fatalf("failed to subscribe to events: %v", err)
+	}
+
+	friendTracker := tracker.NewFriendTracker(wsClient, apiClient)
+	go friendTracker.Start()
 
 	log.Println("tracker is running! Press Ctrl + C to stop")
 

@@ -1,15 +1,16 @@
 package tracker
 
 import (
+	"encoding/json"
 	"log"
-	"time"
+	"slices"
 
 	"github.com/arthurufelix/duuckylcu/internal/api"
 	"github.com/arthurufelix/duuckylcu/internal/lcu"
 )
 
 type FriendTracker struct {
-	lcuClient *lcu.Client
+	wsClient  *lcu.WebSocketClient
 	apiClient *api.Client
 	tracking  map[string]*FriendGameState
 }
@@ -22,44 +23,44 @@ type FriendGameState struct {
 	ChampionId string
 }
 
-func NewFriendTracker(lcuClient *lcu.Client, apiClient *api.Client) *FriendTracker {
+func NewFriendTracker(wsClient *lcu.WebSocketClient, apiClient *api.Client) *FriendTracker {
 	return &FriendTracker{
-		lcuClient: lcuClient,
+		wsClient:  wsClient,
 		apiClient: apiClient,
 		tracking:  make(map[string]*FriendGameState),
 	}
 }
 
-func (ft *FriendTracker) Start(interval time.Duration) {
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-
+func (ft *FriendTracker) Start() {
 	log.Println("Started tracking friend list for ARAM games...")
 
-	for range ticker.C {
-		ft.checkFriends()
+	err := ft.wsClient.Listen(func(event lcu.LCUEvent) {
+		ft.checkFriend(event)
+	})
+	if err != nil {
+		log.Fatalf("websocket error: %v", err)
 	}
 }
 
-func (ft *FriendTracker) checkFriends() {
-	friends, err := ft.lcuClient.GetFriendList()
-	if err != nil {
-		log.Printf("failed to get friend list: %v", err)
+func (ft *FriendTracker) checkFriend(event lcu.LCUEvent) {
+	var friend lcu.Friend
+	if err := json.Unmarshal(event.Data, &friend); err != nil {
+		log.Printf("failed to unmarshal event: %v", err)
 		return
 	}
 
-	for _, friend := range friends {
-		ft.checkFriend(friend)
+	tracking := []string{"Arthur#ツツツ", "Il L7 Il#L77", "Naba#naba1", "dream#heart"}
+	summonerName := friend.GameName + "#" + friend.GameTag
+	if !slices.Contains(tracking, summonerName) {
+		return
 	}
-}
 
-func (ft *FriendTracker) checkFriend(friend lcu.Friend) {
 	if friend.Lol == (lcu.GameStatus{}) {
 		ft.handleFriendNotInGame(friend.PUUID)
 		return
 	}
 
-	if friend.Lol.GameStatus == "inGame" && lcu.IsARAM(&friend.Lol) {
+	if friend.Lol.GameStatus == "inGame" && IsARAM(&friend.Lol) {
 		ft.handleFriendInGame(friend, &friend.Lol)
 	} else {
 		ft.handleFriendNotInGame(friend.PUUID)
@@ -104,4 +105,8 @@ func (ft *FriendTracker) handleFriendNotInGame(puuid string) {
 
 		state.InGame = false
 	}
+}
+
+func IsARAM(gameStatus *lcu.GameStatus) bool {
+	return gameStatus.GameMode == "ARAM" || gameStatus.MapID == "12"
 }
